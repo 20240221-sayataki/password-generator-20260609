@@ -1,36 +1,116 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# パスワード生成ツール
 
-## Getting Started
+Next.js + Tailwind CSSで作成したパスワード生成ツール。
 
-First, run the development server:
+## 機能
+
+- パスワード生成（クリックでランダム生成）
+- クリップボードへのコピー
+- 文字種のオン/オフ（大文字・小文字・数字・記号）
+- 文字数のスライダー調整（4〜32文字）
+- パスワード強度の表示（弱・中・強）
+
+## 技術スタック
+
+| 項目 | 内容 |
+|------|------|
+| フレームワーク | Next.js 16.2.7（App Router） |
+| 言語 | TypeScript |
+| スタイリング | Tailwind CSS |
+| Node.js | v24.16.0 |
+
+## セットアップ
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+`http://localhost:3000` で起動します。
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## ディレクトリ構成
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```
+password-generator/
+├── app/
+│   ├── page.tsx        ← メインのアプリ画面
+│   ├── layout.tsx      ← 全ページ共通のレイアウト
+│   └── globals.css     ← グローバルCSS
+├── public/             ← 静的ファイル置き場
+├── package.json
+├── tailwind.config.ts
+└── next.config.ts
+```
 
-## Learn More
+AppRouterでは `app/` フォルダ内の構造がそのままURLになる。
 
-To learn more about Next.js, take a look at the following resources:
+## 実装の概要
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### state管理
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```tsx
+const [password, setPassword] = useState('');       // 生成されたパスワード
+const [copied, setCopied] = useState(false);        // コピー済みフラグ
+const [length, setLength] = useState(16);           // パスワードの文字数
+const [options, setOptions] = useState({            // 使用する文字種
+  upper: true,
+  lower: true,
+  number: true,
+  symbol: true,
+});
+```
 
-## Deploy on Vercel
+### パスワード生成ロジック
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+`options`で選択された文字種だけを組み合わせて文字セットを作成し、`length`で指定された文字数分ランダムに抽出する。
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```tsx
+const charSets = {
+  upper: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
+  lower: 'abcdefghijklmnopqrstuvwxyz',
+  number: '0123456789',
+  symbol: '!@#$%^&*',
+};
+
+let chars = '';
+if (options.upper) chars += charSets.upper;
+if (options.lower) chars += charSets.lower;
+if (options.number) chars += charSets.number;
+if (options.symbol) chars += charSets.symbol;
+```
+
+全文字種がオフの場合はアラートを表示して処理を中断する。
+
+### 強度判定ロジック
+
+選択された文字種の数と文字数から「弱・中・強」を判定する。
+
+```tsx
+const getStrength = () => {
+  const typeCount = Object.values(options).filter(Boolean).length;
+
+  if (typeCount >= 3 && length >= 12) return '強';
+  if (typeCount >= 2 && length >= 8) return '中';
+  return '弱';
+};
+```
+
+### クリップボードコピー
+
+`navigator.clipboard.writeText()`でコピーし、2秒間「コピーしました！」を表示する。
+
+```tsx
+const copyToClipboard = () => {
+  navigator.clipboard.writeText(password);
+  setCopied(true);
+  setTimeout(() => setCopied(false), 2000);
+};
+```
+
+## 今後の拡張予定
+
+- 生成履歴の表示
+- 複数パスワードの一括生成
+- 除外文字の指定（`0`と`O`など）
+- ユーザー認証・DB連携
+- デプロイ（Vercel）
