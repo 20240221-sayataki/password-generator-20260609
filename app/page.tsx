@@ -12,6 +12,7 @@ export default function Home() {
     symbol: true,
   });
   const [length, setLength] = useState(16);
+  const [history, setHistory] = useState<string[]>([]);
 
   const toggleOption = (key: keyof typeof options) => {
     setOptions({ ...options, [key]: !options[key] });
@@ -41,6 +42,7 @@ export default function Home() {
       result += chars.charAt(Math.floor(Math.random() * chars.length));
     }
     setPassword(result);
+    setHistory([result, ...history].slice(0, 5));
     setCopied(false);
   };
 
@@ -136,6 +138,21 @@ export default function Home() {
             >
               {copied ? 'コピーしました！' : 'クリップボードにコピー'}
             </button>
+          </div>
+        )}
+        {history.length > 0 && (
+          <div className="mt-6">
+            <h2 className="font-semibold mb-2">生成履歴</h2>
+            <ul className="space-y-1">
+              {history.map((item, index) => (
+                <li
+                  key={index}
+                  className="bg-gray-100 rounded p-2 text-sm font-mono break-all"
+                >
+                  {item}
+                </li>
+              ))}
+            </ul>
           </div>
         )}
       </div>
