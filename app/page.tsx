@@ -22,49 +22,25 @@ export default function Home() {
     setOptions({ ...options, [key]: !options[key] });
   };
 
-  const generatePassword = () => {
-    const charSets = {
-      upper: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
-      lower: 'abcdefghijklmnopqrstuvwxyz',
-      number: '0123456789',
-      symbol: '!@#$%^&*',
-    };
+  const generatePassword = async () => {
+    const res = await fetch('/api/generate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ length, count, options, excludeChars }),
+    });
 
-    let chars = '';
-    if (options.upper) chars += charSets.upper;
-    if (options.lower) chars += charSets.lower;
-    if (options.number) chars += charSets.number;
-    if (options.symbol) chars += charSets.symbol;
-
-    // 除外文字を取り除く
-    if (excludeChars) {
-      chars = chars.split('').filter((c) => !excludeChars.includes(c)).join('');
-    }
-
-    if (chars === '') {
-      alert('少なくとも1つは文字種を選択してください');
+    if (!res.ok) {
+      const { error } = await res.json();
+      alert(error);
       return;
     }
 
-    if (chars === '') {
-      alert('少なくとも1つは文字種を選択してください');
-      return;
-    }
-
-  const results: string[] = [];
-  for (let j = 0; j < count; j++) {
-    let result = '';
-    for (let i = 0; i < length; i++) {
-      result += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    results.push(result);
-  }
-
-  setPasswords(results);
-  setPassword(results[0]);
-  setHistory([...results, ...history].slice(0, 5));
-  setCopied(false);
-};
+    const { passwords: results } = await res.json();
+    setPasswords(results);
+    setPassword(results[0]);
+    setHistory([...results, ...history].slice(0, 5));
+    setCopied(false);
+  };
 
   const getStrength = () => {
     const typeCount = Object.values(options).filter(Boolean).length;
@@ -162,7 +138,7 @@ export default function Home() {
         </div>
 
         <button
-          onClick={generatePassword}
+          onClick={() => generatePassword()}
           className="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg mb-4"
         >
           パスワードを生成する
