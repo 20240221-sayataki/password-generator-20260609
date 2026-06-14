@@ -16,6 +16,8 @@ export default function Home() {
   const [count, setCount] = useState(1);
   const [passwords, setPasswords] = useState<string[]>([]);
 
+  const [excludeChars, setExcludeChars] = useState('');
+
   const toggleOption = (key: keyof typeof options) => {
     setOptions({ ...options, [key]: !options[key] });
   };
@@ -33,6 +35,16 @@ export default function Home() {
     if (options.lower) chars += charSets.lower;
     if (options.number) chars += charSets.number;
     if (options.symbol) chars += charSets.symbol;
+
+    // 除外文字を取り除く
+    if (excludeChars) {
+      chars = chars.split('').filter((c) => !excludeChars.includes(c)).join('');
+    }
+
+    if (chars === '') {
+      alert('少なくとも1つは文字種を選択してください');
+      return;
+    }
 
     if (chars === '') {
       alert('少なくとも1つは文字種を選択してください');
@@ -100,6 +112,17 @@ export default function Home() {
             value={count}
             onChange={(e) => setCount(Number(e.target.value))}
             className="w-full"
+          />
+        </div>
+
+        <div className="mb-4">
+          <label className="block mb-1">除外文字</label>
+          <input
+            type="text"
+            value={excludeChars}
+            onChange={(e) => setExcludeChars(e.target.value)}
+            placeholder="例: 0O1lI"
+            className="w-full border rounded-lg px-3 py-2 text-sm"
           />
         </div>
 
