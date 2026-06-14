@@ -13,6 +13,8 @@ export default function Home() {
   });
   const [length, setLength] = useState(16);
   const [history, setHistory] = useState<string[]>([]);
+  const [count, setCount] = useState(1);
+  const [passwords, setPasswords] = useState<string[]>([]);
 
   const toggleOption = (key: keyof typeof options) => {
     setOptions({ ...options, [key]: !options[key] });
@@ -37,14 +39,20 @@ export default function Home() {
       return;
     }
 
+  const results: string[] = [];
+  for (let j = 0; j < count; j++) {
     let result = '';
     for (let i = 0; i < length; i++) {
       result += chars.charAt(Math.floor(Math.random() * chars.length));
     }
-    setPassword(result);
-    setHistory([result, ...history].slice(0, 5));
-    setCopied(false);
-  };
+    results.push(result);
+  }
+
+  setPasswords(results);
+  setPassword(results[0]);
+  setHistory([...results, ...history].slice(0, 5));
+  setCopied(false);
+};
 
   const getStrength = () => {
     const typeCount = Object.values(options).filter(Boolean).length;
@@ -76,6 +84,21 @@ export default function Home() {
             max="32"
             value={length}
             onChange={(e) => setLength(Number(e.target.value))}
+            className="w-full"
+          />
+        </div>
+
+        <div className="mb-4">
+          <label className="flex justify-between mb-1">
+            <span>生成件数</span>
+            <span>{count}件</span>
+          </label>
+          <input
+            type="range"
+            min="1"
+            max="10"
+            value={count}
+            onChange={(e) => setCount(Number(e.target.value))}
             className="w-full"
           />
         </div>
@@ -122,24 +145,30 @@ export default function Home() {
           パスワードを生成する
         </button>
 
-        {password && (
+        {passwords.length > 0 && (
           <div className="mt-4">
-            <div className="bg-gray-100 rounded-lg p-3 text-center font-mono text-lg break-all">
-              {password}
-            </div>
-
-            <div className="mt-2 text-center font-semibold">
-              強度：{getStrength()}
-            </div>
-
+            <ul className="space-y-2">
+              {passwords.map((pw, index) => (
+                <li
+                  key={index}
+                  className="bg-gray-100 rounded-lg p-3 text-center font-mono text-lg break-all"
+                >
+                  {pw}
+                </li>
+              ))}
+            </ul>
             <button
               onClick={copyToClipboard}
               className="w-full mt-3 bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-lg"
             >
-              {copied ? 'コピーしました！' : 'クリップボードにコピー'}
+              {copied ? 'コピーしました！' : '1件目をコピー'}
             </button>
+            <div className="mt-2 text-center font-semibold">
+              強度：{getStrength()}
+            </div>
           </div>
         )}
+
         {history.length > 0 && (
           <div className="mt-6">
             <h2 className="font-semibold mb-2">生成履歴</h2>
